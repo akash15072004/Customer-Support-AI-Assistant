@@ -1,0 +1,198 @@
+{
+  "name": "Customer Support - Escalation Notification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "escalation",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Escalation Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ],
+      "webhookId": "support-escalation"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nreturn [{ json: {\n  conversation_id: body.record?.conversation_id ?? body.conversation_id,\n  customer_message: body.record?.customer_message ?? body.customer_message,\n  classification: body.record?.classification ?? body.classification,\n  reason: body.record?.reason ?? body.reason\n} }];"
+      },
+      "id": "normalize",
+      "name": "Normalize Escalation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "missing",
+              "leftValue": "={{$json.conversation_id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "valid",
+      "name": "Has Conversation ID?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const c = $json.conversation_id;\nconst m = $json.customer_message || '(not supplied)';\nconst cls = $json.classification || 'unknown';\nconst reason = $json.reason || 'Human review required.';\nreturn [{json:{notification:`\ud83d\udea8 Customer Support Escalation\\nConversation: ${c}\\nClassification: ${cls}\\nReason: ${reason}\\nCustomer message: ${m}`}}];"
+      },
+      "id": "format",
+      "name": "Format Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        950,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\":true,\"notification\":$json.notification,\"notified\":true}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1420,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "support@example.com",
+        "toEmail": "support-team@example.com",
+        "subject": "={{'Customer Support Escalation - ' + $json.conversation_id}}",
+        "html": "={{'<h2>Customer Support Escalation</h2><p><b>Conversation:</b> ' + $json.conversation_id + '</p><p><b>Classification:</b> ' + $json.classification + '</p><p><b>Reason:</b> ' + $json.reason + '</p><p><b>Customer message:</b><br>' + $json.customer_message + '</p>'}}",
+        "options": {}
+      },
+      "id": "email",
+      "name": "Send Email Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1180,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\":false,\"error\":\"Missing conversation ID\"}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "bad",
+      "name": "Reject Invalid Event",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        950,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Escalation Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Escalation": {
+      "main": [
+        [
+          {
+            "node": "Has Conversation ID?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Conversation ID?": {
+      "main": [
+        [
+          {
+            "node": "Format Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Invalid Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Notification": {
+      "main": [
+        [
+          {
+            "node": "Send Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Notification": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1"
+}
