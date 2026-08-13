@@ -294,8 +294,19 @@ If the responses were unsafe or unreliable, I would temporarily increase human e
 
 ## 👨‍💻 Developed By
 
-**Akash Chaudhary**
-Software Development Intern Technical Challenge — Customer Support AI Assistant with Human Handoff
+<table>
+<tr>
+<td>
+
+### Akash Chaudhary
+**Software Development Intern Technical Challenge**
+Customer Support AI Assistant with Human Handoff
+
+🔗 [GitHub](https://github.com/akash15072004) &nbsp;•&nbsp; 🚀 [Live Demo](https://customer-support-ai-assistant-two.vercel.app/)
+
+</td>
+</tr>
+</table>
 
 ---
 
