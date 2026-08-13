@@ -250,46 +250,36 @@ n8n provides a simple automation layer for notifying the support team when escal
 
 ### 1. Tell us about one technical problem you personally got stuck on.
 
-One issue I faced during development was an API routing mismatch between the frontend and backend.
+One issue I got stuck on was the message API returning **405 Method Not Allowed** when I tried to send a customer message. The GET request for fetching messages was working with a 200 response, but the POST request was failing.
 
-The UI was working, but sending a message resulted in a `404`/`405` response. I checked the browser request and Next.js terminal logs to identify the endpoint being called.
+I first checked the browser request and the Next.js terminal logs to confirm that the problem was specifically with the POST method. I then inspected the API route structure and compared the endpoint used by the frontend with the actual Next.js App Router route.
 
-I then inspected the API route structure and compared it with the frontend `fetch()` request. I found that the frontend and backend were using different API paths.
+I found that the frontend was sending the message to **`/api/conversations/[id]/messages`**, while the route only implemented a GET handler. The frontend and backend therefore did not have matching HTTP methods. I fixed the endpoint implementation and verified the behavior again through the terminal logs.
 
-After correcting the endpoint and testing again, the request reached the backend successfully.
-
-This taught me to first inspect the actual request, route structure, and server logs before making changes.
-
+I also ran **`npm run build`** to make sure the project compiled successfully. This helped me separate the API behavior issue from build/type errors and confirm that the codebase remained valid after the change.
 ### 2. Walk us through what you actually worked on yesterday.
 
-I started by reviewing the challenge requirements and breaking the problem into smaller parts.
+I started by understanding the challenge requirements and breaking the system into the customer UI, Supabase data layer, AI pipeline, escalation logic, and automation. I then worked on the Next.js support interface and the conversation/message API flow.
 
-I first worked on the Next.js support interface and conversation API. Then I connected Supabase and created the required database structure.
+After that, I connected the application with Supabase and verified that conversations and messages could be created and retrieved. I worked on the AI pipeline for classification and knowledge-base-based responses, including fallback behavior when the AI could not safely answer.
 
-After that, I implemented the AI classification and response flow using OpenAI and a small knowledge base.
+During testing, I used the terminal logs to investigate the 405 POST error. I checked the API route files, verified which handlers were actually exported, corrected the frontend/backend endpoint mismatch, and rebuilt the application.
 
-I then added human escalation for urgent, low-confidence, and unsupported requests.
-
-Finally, I worked on the n8n escalation workflow and tested different failure cases, including API failures, invalid responses, duplicate escalation events, and API routing issues.
-
-I used documentation, terminal logs, debugging, and AI tools where useful, while testing and modifying the implementation myself.
+I used AI tools mainly as a development aid for debugging, reviewing implementation approaches, and improving code structure. I also relied on project documentation, framework behavior, and direct testing rather than assuming generated code was correct. The final decisions and testing were based on what I observed in my own application.
 
 ### 3. Imagine this chatbot is live and suddenly starts giving customers incorrect answers. What would you investigate first?
 
-I would first collect a few incorrect conversations and determine whether the issue affects all requests or only specific categories.
+I would first reproduce the issue using the same customer inputs and capture the exact incorrect responses. I would then determine whether the problem is coming from the knowledge base, prompt, classification, retrieved context, model output, or application logic.
 
-I would check:
+I would compare the current behavior with previously correct examples and inspect logs and stored conversation data. I would also check whether the knowledge-base content was changed, whether the wrong entries were retrieved, or whether the model was receiving incomplete or incorrect context.
 
-1. Customer input.
-2. AI classification and confidence.
-3. Knowledge-base content.
-4. Prompt and model configuration.
-5. Recent code or deployment changes.
-6. Application and AI logs.
+If the responses were unsafe or unreliable, I would temporarily increase human escalation or fallback behavior while investigating. After identifying the root cause, I would fix it, add regression tests for the failed cases, deploy the change, and monitor the results.
 
-I would reproduce the issue with the same inputs and compare the results.
+***
 
-If the responses were unsafe, I would temporarily increase human escalation or fallback behavior while investigating.
+### Developed By
 
-After identifying the root cause, I would fix it, add regression tests for the failed cases, deploy the change, and monitor the results.
+**Akash Chaudhary**
 
+Software Development Intern Technical Challenge  
+Customer Support AI Assistant with Human Handoff
