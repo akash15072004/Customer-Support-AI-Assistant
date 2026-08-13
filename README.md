@@ -1,16 +1,21 @@
-
-# Customer Support AI Assistant with Human Handoff
+# 🤖 Customer Support AI Assistant with Human Handoff
 
 A small AI-powered customer support system built for the Software Development Intern technical challenge.
 
 The system allows customers to send support messages, uses AI to classify and respond to them, and escalates cases to a human when the AI is uncertain or the issue requires manual intervention.
 
-## Links
+---
 
-- Live Demo: https://customer-support-ai-assistant-two.vercel.app/
-- GitHub: https://github.com/akash15072004/Customer-Support-AI-Assistant
+## 🔗 Links
 
-## Architecture
+| Resource | Link |
+|---|---|
+| 🚀 Live Demo | https://customer-support-ai-assistant-two.vercel.app/ |
+| 💻 GitHub Repository | https://github.com/akash15072004/Customer-Support-AI-Assistant |
+
+---
+
+## 🏗️ Architecture
 
 ```text
 Customer
@@ -21,56 +26,64 @@ Next.js Support UI
    v
 Support API
    |
-   +----> OpenAI
-   |       |
-   |       +--> Classification
-   |       +--> Response Generation
+   +------> OpenAI
+   |          |
+   |          +----> Classification
+   |          |
+   |          +----> Response Generation
    |
-   +----> Supabase
-   |       |
-   |       +--> Users
-   |       +--> Conversations
-   |       +--> Messages
-   |       +--> Escalations
-   |       +--> AI Failures
+   +------> Supabase
+   |          |
+   |          +----> Users
+   |          +----> Conversations
+   |          +----> Messages
+   |          +----> Escalations
+   |          +----> AI Failures
    |
-   +----> Human Escalation
-             |
-             v
-          n8n Webhook
-             |
-             v
-       Email / Slack / Teams
-````
+   +------> Human Escalation
+              |
+              v
+         n8n Webhook
+              |
+              v
+      Email / Slack / Teams
+```
 
-## Features
+---
 
-* Customer support chat built with Next.js and React.
-* AI classification into:
+## ✨ Features
 
-  * `general_question`
-  * `technical_issue`
-  * `billing`
-  * `urgent`
-* AI responses grounded in a small knowledge base.
-* Human escalation for urgent or uncertain requests.
-* Safe fallback when the AI/API fails.
-* Invalid AI output validation.
-* Escalation information stored in Supabase.
-* n8n automation for support notifications.
-* Duplicate escalation protection.
+- 💬 Customer support chat built with Next.js, React and TypeScript.
+- 🤖 AI-powered message classification.
+- 📂 Four supported classifications:
+  - `general_question`
+  - `technical_issue`
+  - `billing`
+  - `urgent`
+- 📚 Knowledge-base-grounded AI responses.
+- 👤 Human escalation for urgent or uncertain requests.
+- 🛡️ Safe fallback when AI/API failures occur.
+- ✅ AI output validation.
+- 🗄️ Conversation and escalation storage using Supabase.
+- 🔔 n8n automation for escalation notifications.
+- 🔐 Duplicate escalation protection.
 
-## Tech Stack
+---
 
-* Next.js
-* React
-* TypeScript
-* Supabase / PostgreSQL
-* OpenAI API
-* n8n
-* Git / GitHub
+## 🛠️ Tech Stack
 
-## Project Structure
+| Category | Technology |
+|---|---|
+| Frontend | Next.js, React, TypeScript |
+| Database | Supabase / PostgreSQL |
+| AI | OpenAI API |
+| Automation | n8n |
+| Version Control | Git / GitHub |
+| Deployment | Vercel |
+
+---
+
+## 📁 Project Structure
 
 ```text
 Customer-Support-AI-Assistant/
@@ -92,7 +105,9 @@ Customer-Support-AI-Assistant/
 └── README.md
 ```
 
-## How It Works
+---
+
+## ⚙️ How It Works
 
 1. Customer sends a support message.
 2. The message is stored in Supabase.
@@ -103,28 +118,32 @@ Customer-Support-AI-Assistant/
 7. Escalation details are stored in Supabase.
 8. n8n sends a notification to the support team.
 
-## Human Handoff
+---
+
+## 👤 Human Handoff
 
 The AI escalates a conversation when:
 
-* The request is urgent.
-* The confidence score is below the configured threshold.
-* The issue requires account-specific human action.
-* The knowledge base does not contain enough information.
-* The AI/API fails.
-* The AI returns invalid output.
+- The request is urgent.
+- The confidence score is below the configured threshold.
+- The issue requires account-specific human action.
+- The knowledge base does not contain enough information.
+- The AI/API fails.
+- The AI returns invalid output.
 
 The system prefers escalation over guessing or providing unsupported information.
 
-## Supabase
+---
+
+## 🗄️ Supabase
 
 Supabase is used to store:
 
-* Users
-* Conversations
-* Messages
-* Escalations
-* AI failures
+- Users
+- Conversations
+- Messages
+- Escalations
+- AI failures
 
 The database schema is available in:
 
@@ -132,7 +151,9 @@ The database schema is available in:
 supabase/schema.sql
 ```
 
-## n8n Automation
+---
+
+## 🔔 n8n Automation
 
 The n8n workflow is available in:
 
@@ -153,22 +174,24 @@ When a conversation is escalated, the application sends information such as:
 
 n8n can then forward the notification to email, Slack, Teams, or another support channel.
 
-## Local Setup
+---
 
-### 1. Clone the repository
+## 🚀 Local Setup
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/akash15072004/Customer-Support-AI-Assistant.git
 cd Customer-Support-AI-Assistant
 ```
 
-### 2. Install dependencies
+### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Configure environment variables
+### 3. Configure Environment Variables
 
 Create a `.env.local` file:
 
@@ -182,7 +205,7 @@ OPENAI_MODEL=gpt-4o-mini
 N8N_ESCALATION_WEBHOOK_URL=your_n8n_webhook_url
 ```
 
-Never commit `.env.local` or API keys to GitHub.
+> Never commit `.env.local` or API keys to GitHub.
 
 ### 4. Setup Supabase
 
@@ -194,7 +217,7 @@ supabase/schema.sql
 
 in the Supabase SQL Editor.
 
-### 5. Start the application
+### 5. Start the Application
 
 ```bash
 npm run dev
@@ -206,18 +229,22 @@ Open:
 http://localhost:3000
 ```
 
-## Reliability
+---
+
+## 🛡️ Reliability
 
 The system handles common failure cases:
 
-* **LLM/API failure:** returns a safe fallback and escalates the conversation.
-* **Invalid AI output:** validates classification and confidence before continuing.
-* **Low confidence:** escalates instead of guessing.
-* **Duplicate escalation:** protected using database constraints.
-* **Missing knowledge:** escalates unsupported technical issues.
-* **n8n failure:** escalation remains stored in Supabase so the request is not lost.
+- **LLM/API failure:** Returns a safe fallback and escalates the conversation.
+- **Invalid AI output:** Validates classification and confidence before continuing.
+- **Low confidence:** Escalates instead of guessing.
+- **Duplicate escalation:** Protected using database constraints.
+- **Missing knowledge:** Escalates unsupported technical issues.
+- **n8n failure:** Escalation remains stored in Supabase so the request is not lost.
 
-## Key Technical Decisions
+---
+
+## 🧠 Key Technical Decisions
 
 ### AI Classification
 
@@ -235,18 +262,22 @@ The system is designed to fail safely. When the AI cannot confidently or safely 
 
 n8n provides a simple automation layer for notifying the support team when escalation occurs.
 
-## What I Would Improve If I Had Another Week
+---
 
-* Add a support-agent dashboard.
-* Add authentication and stricter Row Level Security.
-* Add automated tests for AI classification and escalation.
-* Add AI evaluation and monitoring.
-* Add rate limiting and abuse protection.
-* Add better logging and observability.
-* Improve the knowledge base with RAG.
-* Add retry handling for failed n8n notifications.
+## 🔮 What I Would Improve If I Had Another Week
 
-## Challenge Questions
+- Add a support-agent dashboard.
+- Add authentication and stricter Row Level Security.
+- Add automated tests for AI classification and escalation.
+- Add AI evaluation and monitoring.
+- Add rate limiting and abuse protection.
+- Add better logging and observability.
+- Improve the knowledge base with RAG.
+- Add retry handling for failed n8n notifications.
+
+---
+
+## 📝 Challenge Questions
 
 ### 1. Tell us about one technical problem you personally got stuck on.
 
@@ -254,12 +285,13 @@ One issue I got stuck on was the message API returning **405 Method Not Allowed*
 
 I first checked the browser request and the Next.js terminal logs to confirm that the problem was specifically with the POST method. I then inspected the API route structure and compared the endpoint used by the frontend with the actual Next.js App Router route.
 
-I found that the frontend was sending the message to **`/api/conversations/[id]/messages`**, while the route only implemented a GET handler. The frontend and backend therefore did not have matching HTTP methods. I fixed the endpoint implementation and verified the behavior again through the terminal logs.
+I found that the frontend was sending the message to `/api/conversations/[id]/messages`, while the route only implemented a GET handler. The frontend and backend therefore did not have matching HTTP methods. I fixed the endpoint implementation and verified the behavior again through the terminal logs.
 
-I also ran **`npm run build`** to make sure the project compiled successfully. This helped me separate the API behavior issue from build/type errors and confirm that the codebase remained valid after the change.
+I also ran `npm run build` to make sure the project compiled successfully. This helped me separate the API behavior issue from build/type errors and confirm that the codebase remained valid after the change.
+
 ### 2. Walk us through what you actually worked on yesterday.
 
-I started by understanding the challenge requirements and breaking the system into the customer UI, Supabase data layer, AI pipeline, escalation logic, and automation. I then worked on the Next.js support interface and the conversation/message API flow.
+I started by understanding the challenge requirements and breaking the system into the customer UI, Supabase data layer, AI pipeline, escalation logic, and automation. I then worked on the Next.js support interface and the conversation/messages API flow.
 
 After that, I connected the application with Supabase and verified that conversations and messages could be created and retrieved. I worked on the AI pipeline for classification and knowledge-base-based responses, including fallback behavior when the AI could not safely answer.
 
@@ -275,11 +307,11 @@ I would compare the current behavior with previously correct examples and inspec
 
 If the responses were unsafe or unreliable, I would temporarily increase human escalation or fallback behavior while investigating. After identifying the root cause, I would fix it, add regression tests for the failed cases, deploy the change, and monitor the results.
 
-***
+---
 
-### Developed By
+## 👨‍💻 Developed By
 
-**Akash Chaudhary**
+### **Akash Chaudhary**
 
-Software Development Intern Technical Challenge  
-Customer Support AI Assistant with Human Handoff
+**Software Development Intern Technical Challenge**  
+**Customer Support AI Assistant with Human Handoff**
