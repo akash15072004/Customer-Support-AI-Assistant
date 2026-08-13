@@ -1,188 +1,295 @@
+
 # Customer Support AI Assistant with Human Handoff
 
-A small support system built for the Software Development Intern technical challenge. The flow is intentionally focused: customer message → AI classification/response → safe human escalation when needed → n8n notification.
+A small AI-powered customer support system built for the Software Development Intern technical challenge.
+
+The system allows customers to send support messages, uses AI to classify and respond to them, and escalates cases to a human when the AI is uncertain or the issue requires manual intervention.
+
+## Links
+
+- Live Demo: https://customer-support-ai-assistant-two.vercel.app/
+- GitHub: https://github.com/akash15072004/Customer-Support-AI-Assistant
 
 ## Architecture
 
 ```text
-Browser (Next.js)
-      |
-      v
-POST /api/support
-      |
-      +--> Supabase: users / conversations / messages / escalations / ai_failures
-      |
-      +--> OpenAI: classify + answer from demo KB
-      |
-      +--> Supabase: update conversation + assistant message
-      |
-      +--> escalations (dedupe_key + pending-conversation uniqueness)
-                    |
-                    v
-             n8n Webhook (direct)
-                    |
-                    v
-             Notification node
-             (Email / Slack / etc.)
-```
+Customer
+   |
+   v
+Next.js Support UI
+   |
+   v
+Support API
+   |
+   +----> OpenAI
+   |       |
+   |       +--> Classification
+   |       +--> Response Generation
+   |
+   +----> Supabase
+   |       |
+   |       +--> Users
+   |       +--> Conversations
+   |       +--> Messages
+   |       +--> Escalations
+   |       +--> AI Failures
+   |
+   +----> Human Escalation
+             |
+             v
+          n8n Webhook
+             |
+             v
+       Email / Slack / Teams
+````
 
 ## Features
 
-- Customer can start a conversation and view message history.
-- Messages are classified into exactly `general_question`, `technical_issue`, `billing`, or `urgent`.
-- AI answers only from the fictional AcmeCloud knowledge base in `lib/ai.ts`.
-- Low confidence (< 0.65), urgent/security/data-loss requests, account-specific actions, and uncertain cases are escalated.
-- AI/API failure or malformed output falls back to a safe human-handoff response.
-- `escalations.dedupe_key` is unique and a partial unique index prevents multiple pending escalations for one conversation.
-- A newly created escalation event is sent directly to the n8n webhook.
-- n8n can forward the event to email, Slack, Teams, or another notification channel.
-- Already-escalated conversations cannot accidentally be reopened by another customer message.
+* Customer support chat built with Next.js and React.
+* AI classification into:
 
-## Local setup
+  * `general_question`
+  * `technical_issue`
+  * `billing`
+  * `urgent`
+* AI responses grounded in a small knowledge base.
+* Human escalation for urgent or uncertain requests.
+* Safe fallback when the AI/API fails.
+* Invalid AI output validation.
+* Escalation information stored in Supabase.
+* n8n automation for support notifications.
+* Duplicate escalation protection.
 
-### 1. Prerequisites
+## Tech Stack
 
-- Node.js 20+
-- A Supabase project
-- An OpenAI API key
-- n8n (local or hosted, with a reachable webhook URL)
+* Next.js
+* React
+* TypeScript
+* Supabase / PostgreSQL
+* OpenAI API
+* n8n
+* Git / GitHub
 
-### 2. Install
+## Project Structure
+
+```text
+Customer-Support-AI-Assistant/
+│
+├── src/
+│   ├── app/
+│   │   └── api/
+│   ├── components/
+│   ├── lib/
+│   └── types/
+│
+├── supabase/
+│   └── schema.sql
+│
+├── n8n/
+│   └── escalation-workflow.json
+│
+├── package.json
+└── README.md
+```
+
+## How It Works
+
+1. Customer sends a support message.
+2. The message is stored in Supabase.
+3. OpenAI classifies the request.
+4. Relevant knowledge-base information is retrieved.
+5. AI generates a grounded response.
+6. Urgent, low-confidence, unsupported, or failed requests are escalated.
+7. Escalation details are stored in Supabase.
+8. n8n sends a notification to the support team.
+
+## Human Handoff
+
+The AI escalates a conversation when:
+
+* The request is urgent.
+* The confidence score is below the configured threshold.
+* The issue requires account-specific human action.
+* The knowledge base does not contain enough information.
+* The AI/API fails.
+* The AI returns invalid output.
+
+The system prefers escalation over guessing or providing unsupported information.
+
+## Supabase
+
+Supabase is used to store:
+
+* Users
+* Conversations
+* Messages
+* Escalations
+* AI failures
+
+The database schema is available in:
+
+```text
+supabase/schema.sql
+```
+
+## n8n Automation
+
+The n8n workflow is available in:
+
+```text
+n8n/escalation-workflow.json
+```
+
+When a conversation is escalated, the application sends information such as:
+
+```json
+{
+  "conversation_id": "conversation-id",
+  "customer_message": "Customer message",
+  "classification": "urgent",
+  "reason": "Requires human review"
+}
+```
+
+n8n can then forward the notification to email, Slack, Teams, or another support channel.
+
+## Local Setup
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/akash15072004/Customer-Support-AI-Assistant.git
+cd Customer-Support-AI-Assistant
+```
+
+### 2. Install dependencies
 
 ```bash
 npm install
-cp .env.example .env.local
 ```
 
-Fill in:
+### 3. Configure environment variables
+
+Create a `.env.local` file:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVER_ONLY_SERVICE_ROLE_KEY
-OPENAI_API_KEY=YOUR_OPENAI_API_KEY
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4o-mini
-N8N_ESCALATION_WEBHOOK_URL=https://YOUR_N8N_HOST/webhook/escalation
+
+N8N_ESCALATION_WEBHOOK_URL=your_n8n_webhook_url
 ```
 
-**Security:** `SUPABASE_SERVICE_ROLE_KEY` and `OPENAI_API_KEY` are server secrets. Never prefix them with `NEXT_PUBLIC_` and never expose them to browser code.
+Never commit `.env.local` or API keys to GitHub.
 
-### 3. Create the database
+### 4. Setup Supabase
 
-Open Supabase SQL Editor and run `supabase/schema.sql`.
+Run the SQL schema from:
 
-The schema creates `users`, `conversations`, `messages`, `escalations`, and `ai_failures`. The code is aligned with the existing database columns: `messages.sender`, `conversations.status`, and `escalations.*`. RLS is enabled because database access is performed by the trusted Next.js server using the service-role key. If direct browser access is added later, create proper per-user RLS policies first.
+```text
+supabase/schema.sql
+```
 
-### 4. Start the app
+in the Supabase SQL Editor.
+
+### 5. Start the application
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open:
 
-## n8n setup
-
-1. Import `n8n/escalation-workflow.json` into n8n.
-2. Open the **Escalation Webhook** node and use its **Production URL**.
-3. Set that URL as `N8N_ESCALATION_WEBHOOK_URL` in `.env.local`.
-4. Open **Send Email Notification** and configure n8n SMTP/email credentials, sender, and recipient. The imported node uses placeholder addresses that you must replace.
-5. If you prefer Slack/Teams, replace that node with your preferred notification integration and keep the same fields from **Format Notification**.
-6. Activate the workflow.
-
-The supplied workflow validates the event, formats the required notification, sends an email notification, and then returns a success response. The Next.js server sends this JSON to n8n when a new escalation event is created:
-
-```json
-{
-  "conversation_id": "...",
-  "customer_message": "...",
-  "classification": "urgent",
-  "reason": "..."
-}
+```text
+http://localhost:3000
 ```
 
-The application intentionally treats n8n notification delivery as non-blocking: if n8n is down, the escalation remains stored in Supabase and the customer request still completes. The server logs the notification failure for investigation/retry handling.
+## Reliability
 
-## Reliability / failure handling
+The system handles common failure cases:
 
-1. **LLM/API failure** → safe fallback response + escalation.
-2. **Invalid JSON / invalid category / invalid field types / invalid confidence** → safe fallback response + escalation.
-3. **Low confidence** → escalation.
-4. **Duplicate escalation** → database uniqueness on `escalation_events.conversation_id`; duplicate insert (`23505`) is treated as idempotent.
-5. **Missing/invalid message** → HTTP 400.
-6. **Already-escalated conversation** → HTTP 409 and the customer is asked to start a new conversation.
-7. **n8n failure** → customer request is not failed; the escalation event remains persisted and the notification failure is logged.
-8. **Missing n8n URL** → escalation remains persisted; notification is skipped with a server warning.
+* **LLM/API failure:** returns a safe fallback and escalates the conversation.
+* **Invalid AI output:** validates classification and confidence before continuing.
+* **Low confidence:** escalates instead of guessing.
+* **Duplicate escalation:** protected using database constraints.
+* **Missing knowledge:** escalates unsupported technical issues.
+* **n8n failure:** escalation remains stored in Supabase so the request is not lost.
 
-## Demo test cases
+## Key Technical Decisions
 
-1. `How do I reset my password?` → normally a general/technical answer without escalation.
-2. `I was charged twice and need a refund.` → billing + escalation because an account-specific billing action requires a human.
-3. `Someone accessed my account and changed my email.` → urgent + escalation.
-4. `I'm unable to log in. I tried resetting my password twice but I still haven't received the email.` → technical issue; escalate if the AI cannot safely resolve it.
-5. Temporarily remove or invalidate `OPENAI_API_KEY` → safe fallback + escalation.
-6. Send another message to an already escalated conversation → HTTP 409; it must not reopen the conversation or create another escalation event.
+### AI Classification
 
-## Important implementation decisions
+A small classification layer separates requests into four categories and uses confidence to decide whether human intervention is required.
 
-### Why classify and respond in one LLM call?
-For this small demo it reduces latency and implementation surface. The response is constrained by a tiny knowledge base and JSON output validation. A larger production system could separate classification and answer generation for better observability and independent evaluation.
+### Knowledge-Base Grounding
 
-### Why escalate on low confidence?
-The challenge says to hand off when the AI is uncertain rather than pretending it can solve the issue. A 0.65 threshold is a documented demo assumption, not a production-calibrated number.
+The AI is instructed to answer only from the provided knowledge base and avoid inventing product behavior, policies, refunds, URLs, or account information.
 
-### Why use a unique escalation event?
-A conversation can be processed more than once. The unique `dedupe_key` plus pending-conversation constraint makes event creation idempotent, preventing multiple escalation records for one conversation.
+### Human Handoff
 
-### Why direct n8n webhook instead of a Supabase Database Webhook?
-The challenge only requires an n8n workflow triggered by escalation. A direct server-to-n8n webhook keeps the trigger explicit and makes the demo easier to understand and test. Supabase remains the source of record for escalation events.
+The system is designed to fail safely. When the AI cannot confidently or safely answer, it escalates instead of pretending to know the answer.
 
-### Why a fictional knowledge base?
-The challenge permits creating a small demo knowledge base. This avoids inventing policies about a real company.
+### n8n
 
-## What I would improve if I had another week
+n8n provides a simple automation layer for notifying the support team when escalation occurs.
 
-- Add authenticated customer accounts and strict row-level security.
-- Add an internal agent dashboard for viewing and resolving escalations.
-- Add realtime Supabase updates and streaming responses.
-- Add automated evaluation datasets for classification accuracy and hallucination rate.
-- Add structured tracing for LLM latency, token cost, confidence, and escalation rate.
-- Add rate limiting, abuse protection, PII redaction, and audit logs.
-- Make the knowledge base editable and use RAG/embeddings instead of a hard-coded prompt.
-- Add integration tests for LLM failures, malformed output, retries, and duplicate webhook deliveries.
+## What I Would Improve If I Had Another Week
 
-## Challenge questions
+* Add a support-agent dashboard.
+* Add authentication and stricter Row Level Security.
+* Add automated tests for AI classification and escalation.
+* Add AI evaluation and monitoring.
+* Add rate limiting and abuse protection.
+* Add better logging and observability.
+* Improve the knowledge base with RAG.
+* Add retry handling for failed n8n notifications.
 
-### 1. A technical problem I personally got stuck on
+## Challenge Questions
 
-**Replace this with a real example from your own experience before submitting.** Do not claim an AI-generated story as personal experience.
+### 1. Tell us about one technical problem you personally got stuck on.
 
-A strong structure is: exact bug → first hypothesis → first fix that failed → logs/network/database investigation → root cause → final fix → lesson learned.
+One issue I faced during development was an API routing mismatch between the frontend and backend.
 
-### 2. What I worked on yesterday
+The UI was working, but sending a message resulted in a `404`/`405` response. I checked the browser request and Next.js terminal logs to identify the endpoint being called.
 
-**Replace this with your actual timeline.** Start from the first task, explain what you implemented yourself, and explicitly state where you used documentation, tutorials, or AI tools.
+I then inspected the API route structure and compared it with the frontend `fetch()` request. I found that the frontend and backend were using different API paths.
 
-### 3. If the chatbot suddenly gives incorrect answers
+After correcting the endpoint and testing again, the request reached the backend successfully.
 
-I would first determine whether the issue is broad or limited to a particular intent. I would inspect recent conversations and compare incorrect answers with customer inputs, classification, confidence, model, prompt/knowledge-base version, and application logs.
+This taught me to first inspect the actual request, route structure, and server logs before making changes.
 
-Then I would narrow it down systematically:
+### 2. Walk us through what you actually worked on yesterday.
 
-1. Reproduce several incorrect cases with the exact production inputs.
-2. Check whether the classifier is assigning the wrong category.
-3. Check whether the knowledge base contains missing, stale, or contradictory information.
-4. Check prompt/model/config changes and recent deployments.
-5. Check malformed or truncated model output and response validation.
-6. Compare model output with a known-good evaluation set.
-7. If the issue is unsafe, temporarily increase escalation/fallback behavior while investigating.
-8. Fix the root cause, add regression tests for the failing examples, and monitor the error rate after deployment.
+I started by reviewing the challenge requirements and breaking the problem into smaller parts.
 
-## Submission checklist
+I first worked on the Next.js support interface and conversation API. Then I connected Supabase and created the required database structure.
 
-- [ ] GitHub repository
-- [ ] Working deployed app or clear local setup
-- [ ] Supabase schema/migration
-- [ ] n8n workflow
-- [ ] README with architecture, assumptions, decisions
-- [ ] “What I would improve if I had another week”
-- [ ] Honest answers to all three challenge questions
+After that, I implemented the AI classification and response flow using OpenAI and a small knowledge base.
+
+I then added human escalation for urgent, low-confidence, and unsupported requests.
+
+Finally, I worked on the n8n escalation workflow and tested different failure cases, including API failures, invalid responses, duplicate escalation events, and API routing issues.
+
+I used documentation, terminal logs, debugging, and AI tools where useful, while testing and modifying the implementation myself.
+
+### 3. Imagine this chatbot is live and suddenly starts giving customers incorrect answers. What would you investigate first?
+
+I would first collect a few incorrect conversations and determine whether the issue affects all requests or only specific categories.
+
+I would check:
+
+1. Customer input.
+2. AI classification and confidence.
+3. Knowledge-base content.
+4. Prompt and model configuration.
+5. Recent code or deployment changes.
+6. Application and AI logs.
+
+I would reproduce the issue with the same inputs and compare the results.
+
+If the responses were unsafe, I would temporarily increase human escalation or fallback behavior while investigating.
+
+After identifying the root cause, I would fix it, add regression tests for the failed cases, deploy the change, and monitor the results.
+
